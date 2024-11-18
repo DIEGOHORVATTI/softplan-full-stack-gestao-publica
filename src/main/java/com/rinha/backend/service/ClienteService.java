@@ -18,7 +18,7 @@ public class ClienteService {
     private final TransacaoRepository transacaoRepository;
 
     @Transactional
-    public TransacaoResponse realizarTransacao(Long id, TransacaoRequest request) {
+    public TransacaoResponse executeTransaction(Long id, TransacaoRequest request) {
         Cliente cliente = clienteRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -46,7 +46,7 @@ public class ClienteService {
         return new TransacaoResponse(cliente.getLimite(), cliente.getSaldo());
     }
 
-    public ExtratoResponse obterExtrato(Long id) {
+    public ExtratoResponse getTransactionStatement(Long id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 

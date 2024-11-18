@@ -13,15 +13,20 @@ import lombok.RequiredArgsConstructor;
 public class ClienteController {
     private final ClienteService clienteService;
 
+    @GetMapping
+    public String HelloWord() {
+        return "Hello Word";
+    }
+
     @PostMapping("/{id}/transacoes")
-    public ResponseEntity<TransacaoResponse> realizarTransacao(
+    public ResponseEntity<TransacaoResponse> executeTransaction(
             @PathVariable Long id,
             @Valid @RequestBody TransacaoRequest request) {
-        return ResponseEntity.ok(clienteService.realizarTransacao(id, request));
+        return ResponseEntity.ok(clienteService.executeTransaction(id, request));
     }
 
     @GetMapping("/{id}/extrato")
-    public ResponseEntity<ExtratoResponse> obterExtrato(@PathVariable Long id) {
-        return ResponseEntity.ok(clienteService.obterExtrato(id));
+    public ResponseEntity<ExtratoResponse> getTransactionStatement(@PathVariable Long id) {
+        return ResponseEntity.ok(clienteService.getTransactionStatement(id));
     }
 }
