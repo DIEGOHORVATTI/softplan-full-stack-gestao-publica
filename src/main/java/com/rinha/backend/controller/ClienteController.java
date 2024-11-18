@@ -22,6 +22,7 @@ public class ClienteController {
     public ResponseEntity<TransactionSummary> executeTransaction(
             @PathVariable Long id,
             @Valid @RequestBody TransacaoRequest request) {
+
         return ResponseEntity.ok(clienteService.executeTransaction(id, request));
     }
 

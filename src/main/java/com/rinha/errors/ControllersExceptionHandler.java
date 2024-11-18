@@ -1,8 +1,6 @@
 package com.rinha.errors;
 
 import jakarta.persistence.EntityNotFoundException;
-
-import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,38 +9,35 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ControllersExceptionHandler {
 
+  private ResponseEntity<ExceptionDTO> createExceptionResponse(String message, HttpStatus status) {
+    ExceptionDTO response = new ExceptionDTO(message, status.value());
+
+    return ResponseEntity.status(status).body(response);
+  }
+
   @ExceptionHandler(EntityNotFoundException.class)
   public ResponseEntity<ExceptionDTO> handleEntityNotFound(EntityNotFoundException exception) {
-    ExceptionDTO response = new ExceptionDTO(exception.getMessage(), HttpStatus.NOT_FOUND.value());
 
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    return createExceptionResponse(exception.getMessage(), HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(BadRequestException.class)
   public ResponseEntity<ExceptionDTO> handleBadRequest(BadRequestException exception) {
-    ExceptionDTO response = new ExceptionDTO(exception.getMessage(), HttpStatus.BAD_REQUEST.value());
 
-    return ResponseEntity.badRequest().body(response);
+    return createExceptionResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(RuntimeException.class)
   public ResponseEntity<ExceptionDTO> handleRuntimeException(RuntimeException exception) {
-    ExceptionDTO response = new ExceptionDTO("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR.value());
 
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-  }
-
-  @ExceptionHandler(NoHandlerFoundException.class)
-  public ResponseEntity<ExceptionDTO> handleNoHandlerFound(NoHandlerFoundException exception) {
-    ExceptionDTO response = new ExceptionDTO("Resource not found", HttpStatus.NOT_FOUND.value());
-
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    return createExceptionResponse("Internal server error: " + exception.getMessage(),
+        HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ExceptionDTO> handleGenericException(Exception exception) {
-    ExceptionDTO response = new ExceptionDTO("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR.value());
 
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    return createExceptionResponse("An unexpected error occurred. Please try again later.",
+        HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
