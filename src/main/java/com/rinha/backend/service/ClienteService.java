@@ -21,19 +21,32 @@ public class ClienteService {
 
     @Transactional
     public TransactionSummary executeTransaction(Long id, TransacaoRequest request) {
+        int valor = request.getValor();
+        String descricao = request.getDescricao();
+        String type = request.getTipo();
 
         Cliente client = clienteRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
 
+        int limit = client.getLimite();
         int newBalance = client.getSaldo();
-        if (request.getTipo().equals("d")) {
-            newBalance -= request.getValor();
-            if (newBalance < -client.getLimite()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "Saldo não pode ficar abaixo do limite");
-            }
-        } else {
-            newBalance += request.getValor();
+
+        // r para recebível | d para débito
+        switch (type) {
+            case "d":
+                newBalance -= valor;
+
+                if (newBalance < -limit) {
+                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                            "Saldo não pode ficar abaixo do limite");
+                }
+
+                break;
+            case "r":
+                newBalance += valor;
+                break;
+            default:
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo de transação inválido");
         }
 
         client.setSaldo(newBalance);
@@ -41,13 +54,13 @@ public class ClienteService {
 
         Transaction transaction = new Transaction();
         transaction.setCliente(client);
-        transaction.setValor(request.getValor());
-        transaction.setTipo(request.getTipo());
-        transaction.setDescricao(request.getDescricao());
+        transaction.setValor(valor);
+        transaction.setTipo(type);
+        transaction.setDescricao(descricao);
         transaction.setRealizadaEm(LocalDateTime.now());
         transacaoRepository.save(transaction);
 
-        return new TransactionSummary(client.getLimite(), client.getSaldo());
+        return new TransactionSummary(limit, newBalance);
     }
 
     public ExtratoResponse getTransactionStatement(Long id) {
