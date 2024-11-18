@@ -18,18 +18,19 @@ import java.util.stream.Stream;
 public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final TransacaoRepository transacaoRepository;
-    private Stream<Transaction> transacaoStream;
 
     @Transactional
     public TransactionSummary executeTransaction(Long id, TransacaoRequest request) {
+
         Cliente client = clienteRepository.findByIdWithLock(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
 
         int newBalance = client.getSaldo();
         if (request.getTipo().equals("d")) {
             newBalance -= request.getValor();
             if (newBalance < -client.getLimite()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Saldo não pode ficar abaixo do limite");
             }
         } else {
             newBalance += request.getValor();
@@ -51,7 +52,7 @@ public class ClienteService {
 
     public ExtratoResponse getTransactionStatement(Long id) {
         Cliente client = clienteRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
 
         ExtratoResponse.Saldo balanceInfo = new ExtratoResponse.Saldo();
         balanceInfo.setTotal(client.getSaldo());
@@ -61,8 +62,8 @@ public class ClienteService {
         ExtratoResponse response = new ExtratoResponse();
         response.setSaldo(balanceInfo);
 
-        transacaoStream = transacaoRepository.findTop10ByClienteIdOrderByRealizadaEmDesc(id).stream();
-        Stream<TransacaoExtrato> transactionToExtratoMap = transacaoStream
+        Stream<TransacaoExtrato> transactionToExtratoMap = transacaoRepository
+                .findTop10ByClienteIdOrderByRealizadaEmDesc(id).stream()
                 .map(transaction -> {
                     ExtratoResponse.TransacaoExtrato transactionExtrato = new ExtratoResponse.TransacaoExtrato();
                     transactionExtrato.setValor(transaction.getValor());
