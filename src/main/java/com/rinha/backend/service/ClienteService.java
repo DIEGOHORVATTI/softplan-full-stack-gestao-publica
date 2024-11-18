@@ -18,48 +18,48 @@ import java.util.stream.Stream;
 public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final TransacaoRepository transacaoRepository;
-    private Stream<Transacao> transacaoStream;
+    private Stream<Transaction> transacaoStream;
 
     @Transactional
     public TransactionSummary executeTransaction(Long id, TransacaoRequest request) {
-        Cliente cliente = clienteRepository.findByIdWithLock(id)
+        Cliente client = clienteRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        int novoSaldo = cliente.getSaldo();
+        int newBalance = client.getSaldo();
         if (request.getTipo().equals("d")) {
-            novoSaldo -= request.getValor();
-            if (novoSaldo < -cliente.getLimite()) {
+            newBalance -= request.getValor();
+            if (newBalance < -client.getLimite()) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
             }
         } else {
-            novoSaldo += request.getValor();
+            newBalance += request.getValor();
         }
 
-        cliente.setSaldo(novoSaldo);
-        clienteRepository.save(cliente);
+        client.setSaldo(newBalance);
+        clienteRepository.save(client);
 
-        Transacao transacao = new Transacao();
-        transacao.setCliente(cliente);
-        transacao.setValor(request.getValor());
-        transacao.setTipo(request.getTipo());
-        transacao.setDescricao(request.getDescricao());
-        transacao.setRealizadaEm(LocalDateTime.now());
-        transacaoRepository.save(transacao);
+        Transaction transaction = new Transaction();
+        transaction.setCliente(client);
+        transaction.setValor(request.getValor());
+        transaction.setTipo(request.getTipo());
+        transaction.setDescricao(request.getDescricao());
+        transaction.setRealizadaEm(LocalDateTime.now());
+        transacaoRepository.save(transaction);
 
-        return new TransactionSummary(cliente.getLimite(), cliente.getSaldo());
+        return new TransactionSummary(client.getLimite(), client.getSaldo());
     }
 
     public ExtratoResponse getTransactionStatement(Long id) {
-        Cliente cliente = clienteRepository.findById(id)
+        Cliente client = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        ExtratoResponse.Saldo saldo = new ExtratoResponse.Saldo();
-        saldo.setTotal(cliente.getSaldo());
-        saldo.setData_extrato(LocalDateTime.now());
-        saldo.setLimite(cliente.getLimite());
+        ExtratoResponse.Saldo balanceInfo = new ExtratoResponse.Saldo();
+        balanceInfo.setTotal(client.getSaldo());
+        balanceInfo.setData_extrato(LocalDateTime.now());
+        balanceInfo.setLimite(client.getLimite());
 
         ExtratoResponse response = new ExtratoResponse();
-        response.setSaldo(saldo);
+        response.setSaldo(balanceInfo);
 
         transacaoStream = transacaoRepository.findTop10ByClienteIdOrderByRealizadaEmDesc(id).stream();
         Stream<TransacaoExtrato> transactionToExtratoMap = transacaoStream
