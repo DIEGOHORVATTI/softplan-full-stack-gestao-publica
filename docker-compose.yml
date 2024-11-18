@@ -1,25 +1,11 @@
 version: '3.8'
 
 services:
-  haproxy:
-    image: haproxy:latest
-    ports:
-      - '9999:9999'
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    depends_on:
-      - api01
-      - api02
-    deploy:
-      resources:
-        limits:
-          cpus: '0.2'
-          memory: '50MB'
-
   api01:
     build:
-      context: ./
+      context: .
       dockerfile: Dockerfile
+    hostname: api01
     environment:
       - DB_HOSTNAME=db
     ports:
@@ -34,8 +20,9 @@ services:
 
   api02:
     build:
-      context: ./
+      context: .
       dockerfile: Dockerfile
+    hostname: api02
     environment:
       - DB_HOSTNAME=db
     ports:
@@ -47,3 +34,38 @@ services:
         limits:
           cpus: '0.6'
           memory: '200MB'
+
+  haproxy:
+    image: haproxy:latest
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - api01
+      - api02
+    ports:
+      - '9999:9999'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.17'
+          memory: '10MB'
+
+  db:
+    image: postgres:latest
+    hostname: db
+    environment:
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=rinha
+    volumes:
+      - ./script.sql:/docker-entrypoint-initdb.d/script.sql
+    deploy:
+      resources:
+        limits:
+          cpus: '0.13'
+          memory: '140MB'
+
+networks:
+  default:
+    driver: bridge
+    name: rinha-nginx-2024q1

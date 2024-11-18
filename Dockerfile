@@ -1,18 +1,26 @@
-FROM eclipse-temurin:17-jdk-alpine as build
-WORKDIR /workspace/app
+# Usando uma imagem do OpenJDK 17
+FROM openjdk:17-jdk-slim
 
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
-COPY src src
+# Diretório de trabalho no contêiner
+WORKDIR /app
 
-RUN ./mvnw install -DskipTests
-RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
+# Copiar o wrapper do Maven e o pom.xml
+COPY mvnw pom.xml ./
 
-FROM eclipse-temurin:17-jre-alpine
-VOLUME /tmp
-ARG DEPENDENCY=/workspace/app/target/dependency
-COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
-COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
-COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
-ENTRYPOINT ["java","-cp","app:app/lib/*","com.rinha.backend.Application"]
+# Baixar as dependências do Maven
+RUN ./mvnw dependency:go-offline
+
+# Copiar o código fonte da aplicação
+COPY src ./src
+
+# Construir o aplicativo usando o Maven
+RUN ./mvnw clean package -DskipTests
+
+# Copiar o JAR gerado para o contêiner
+COPY target/*.jar app.jar
+
+# Expor a porta 8080 para a aplicação
+EXPOSE 8080
+
+# Comando para iniciar a aplicação
+ENTRYPOINT ["java", "-jar", "app.jar"]
