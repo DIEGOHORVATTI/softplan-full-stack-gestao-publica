@@ -18,7 +18,7 @@ public class ClienteService {
     private final TransacaoRepository transacaoRepository;
 
     @Transactional
-    public TransacaoResponse executeTransaction(Long id, TransacaoRequest request) {
+    public TransactionSummary executeTransaction(Long id, TransacaoRequest request) {
         Cliente cliente = clienteRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -43,7 +43,7 @@ public class ClienteService {
         transacao.setRealizadaEm(LocalDateTime.now());
         transacaoRepository.save(transacao);
 
-        return new TransacaoResponse(cliente.getLimite(), cliente.getSaldo());
+        return new TransactionSummary(cliente.getLimite(), cliente.getSaldo());
     }
 
     public ExtratoResponse getTransactionStatement(Long id) {

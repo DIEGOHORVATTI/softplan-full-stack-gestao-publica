@@ -19,7 +19,7 @@ public class ClienteController {
     }
 
     @PostMapping("/{id}/transacoes")
-    public ResponseEntity<TransacaoResponse> executeTransaction(
+    public ResponseEntity<TransactionSummary> executeTransaction(
             @PathVariable Long id,
             @Valid @RequestBody TransacaoRequest request) {
         return ResponseEntity.ok(clienteService.executeTransaction(id, request));
