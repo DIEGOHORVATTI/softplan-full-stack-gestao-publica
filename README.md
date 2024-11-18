@@ -1,5 +1,14 @@
 # Desafio técnico Softplan - Full Stack - Gestão Pública - Ambiental - 2024
 
+## Como iniciar
+
+#### Para iniciar o projeto, é necessário ter o Docker e o Docker Compose instalados.
+
+```shell
+docker build -t rinha-api .
+docker-compose up --build
+```
+
 ## Desafio
 
 Para esse desafio será preciso desenvolver uma pequena API REST (duas rotas) escrita em Java, além de uma pequena aplicação frontend (duas rotas) escrita em Typescript/Javascript.
