@@ -50,24 +50,25 @@ public class ClienteService {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        ExtratoResponse response = new ExtratoResponse();
-
         ExtratoResponse.Saldo saldo = new ExtratoResponse.Saldo();
         saldo.setTotal(cliente.getSaldo());
         saldo.setData_extrato(LocalDateTime.now());
         saldo.setLimite(cliente.getLimite());
+
+        ExtratoResponse response = new ExtratoResponse();
         response.setSaldo(saldo);
 
         response.setUltimas_transacoes(
                 transacaoRepository.findTop10ByClienteIdOrderByRealizadaEmDesc(id)
                         .stream()
-                        .map(t -> {
-                            ExtratoResponse.TransacaoExtrato te = new ExtratoResponse.TransacaoExtrato();
-                            te.setValor(t.getValor());
-                            te.setTipo(t.getTipo());
-                            te.setDescricao(t.getDescricao());
-                            te.setRealizada_em(t.getRealizadaEm());
-                            return te;
+                        .map(transaction -> {
+                            ExtratoResponse.TransacaoExtrato transactionExtrato = new ExtratoResponse.TransacaoExtrato();
+                            transactionExtrato.setValor(transaction.getValor());
+                            transactionExtrato.setTipo(transaction.getTipo());
+                            transactionExtrato.setDescricao(transaction.getDescricao());
+                            transactionExtrato.setRealizada_em(transaction.getRealizadaEm());
+
+                            return transactionExtrato;
                         })
                         .collect(Collectors.toList()));
 
