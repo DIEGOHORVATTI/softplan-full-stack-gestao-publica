@@ -14,8 +14,8 @@ public class ClienteController {
     private final ClienteService clienteService;
 
     @GetMapping
-    public String HelloWord() {
-        return "Hello Word";
+    public String GetApiStatus() {
+        return "API Running 🚀";
     }
 
     @PostMapping("/{id}/transacoes")
