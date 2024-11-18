@@ -1,6 +1,7 @@
 package com.rinha.backend.service;
 
 import com.rinha.backend.dto.*;
+import com.rinha.backend.dto.ExtratoResponse.TransacaoExtrato;
 import com.rinha.backend.model.*;
 import com.rinha.backend.repository.*;
 import jakarta.transaction.Transactional;
@@ -10,12 +11,14 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final TransacaoRepository transacaoRepository;
+    private Stream<Transacao> transacaoStream;
 
     @Transactional
     public TransactionSummary executeTransaction(Long id, TransacaoRequest request) {
@@ -58,19 +61,19 @@ public class ClienteService {
         ExtratoResponse response = new ExtratoResponse();
         response.setSaldo(saldo);
 
-        response.setUltimas_transacoes(
-                transacaoRepository.findTop10ByClienteIdOrderByRealizadaEmDesc(id)
-                        .stream()
-                        .map(transaction -> {
-                            ExtratoResponse.TransacaoExtrato transactionExtrato = new ExtratoResponse.TransacaoExtrato();
-                            transactionExtrato.setValor(transaction.getValor());
-                            transactionExtrato.setTipo(transaction.getTipo());
-                            transactionExtrato.setDescricao(transaction.getDescricao());
-                            transactionExtrato.setRealizada_em(transaction.getRealizadaEm());
+        transacaoStream = transacaoRepository.findTop10ByClienteIdOrderByRealizadaEmDesc(id).stream();
+        Stream<TransacaoExtrato> transactionToExtratoMap = transacaoStream
+                .map(transaction -> {
+                    ExtratoResponse.TransacaoExtrato transactionExtrato = new ExtratoResponse.TransacaoExtrato();
+                    transactionExtrato.setValor(transaction.getValor());
+                    transactionExtrato.setTipo(transaction.getTipo());
+                    transactionExtrato.setDescricao(transaction.getDescricao());
+                    transactionExtrato.setRealizada_em(transaction.getRealizadaEm());
 
-                            return transactionExtrato;
-                        })
-                        .collect(Collectors.toList()));
+                    return transactionExtrato;
+                });
+
+        response.setUltimas_transacoes(transactionToExtratoMap.collect(Collectors.toList()));
 
         return response;
     }
