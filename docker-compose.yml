@@ -54,11 +54,13 @@ services:
     image: postgres:latest
     hostname: db
     environment:
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123
-      - POSTGRES_USER=admin
-      - POSTGRES_DB=rinha
+      - POSTGRES_DB=postgres
     volumes:
-      - ./script.sql:/docker-entrypoint-initdb.d/script.sql
+      - ./script.sql:/docker-entrypoint-initdb.d/script.sql:ro
+    ports:
+      - '5432:5432'
     deploy:
       resources:
         limits:
