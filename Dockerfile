@@ -1,14 +1,9 @@
-FROM eclipse-temurin:17-jdk-focal AS builder
+FROM openjdk:17-jdk-slim
 
 WORKDIR /app
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
 
-COPY src ./src
-RUN ./mvnw package -DskipTests
+COPY target/backend-1.0.0.jar backend.jar
 
-FROM eclipse-temurin:17-jre-focal
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "backend.jar"]

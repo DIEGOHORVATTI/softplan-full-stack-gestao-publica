@@ -1,19 +1,13 @@
-version: '3.8'
-
 services:
-  api01: &api
+  api01:
     build:
       context: .
       dockerfile: Dockerfile
     hostname: api01
     environment:
       - DB_HOSTNAME=db
-      - SPRING_PROFILES_ACTIVE=prod
-    ports:
-      - '8081:8080'
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     deploy:
       resources:
         limits:
@@ -22,20 +16,30 @@ services:
     restart: unless-stopped
 
   api02:
-    <<: *api
+    build:
+      context: .
+      dockerfile: Dockerfile
     hostname: api02
-    ports:
-      - '8082:8080'
+    environment:
+      - DB_HOSTNAME=db
+    depends_on:
+      - db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.6'
+          memory: '200MB'
+    restart: unless-stopped
 
-  haproxy:
-    image: haproxy:latest
+  nginx:
+    image: nginx:latest
     volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - api01
       - api02
     ports:
-      - '9999:9999'
+      - '9999:80'
     deploy:
       resources:
         limits:
@@ -50,7 +54,7 @@ services:
       - POSTGRES_PASSWORD=123
       - POSTGRES_DB=postgres
     volumes:
-      - ./script.sql:/docker-entrypoint-initdb.d/script.sql:ro
+      - ./script.sql:/docker-entrypoint-initdb.d/script.sql
     ports:
       - '5432:5432'
     deploy:
