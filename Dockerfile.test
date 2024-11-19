@@ -1,0 +1,17 @@
+FROM maven:3.8.6-openjdk-17 AS builder
+
+WORKDIR /app
+
+COPY . /app
+
+RUN ./mvnw clean install
+
+FROM openjdk:17-slim
+
+WORKDIR /app
+
+COPY --from=builder /app /app
+
+WORKDIR /opt/gatling/gatling-charts-highcharts-3.8.0
+
+COPY ./src/test/ /opt/gatling/gatling-charts-highcharts-3.8.0/user-files/simulations

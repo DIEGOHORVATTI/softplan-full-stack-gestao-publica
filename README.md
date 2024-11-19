@@ -9,6 +9,22 @@ docker build -t rinha-api .
 docker-compose up --build
 ```
 
+#### Para rodar o teste de carga
+
+##### No docker
+
+```shell
+docker-compose -f docker-compose.test.yml up --build
+```
+
+##### Localmente
+
+```shell
+./mvnw -X gatling:test
+```
+
+<hr />
+
 ## Desafio
 
 Para esse desafio será preciso desenvolver uma pequena API REST (duas rotas) escrita em Java, além de uma pequena aplicação frontend (duas rotas) escrita em Typescript/Javascript.
