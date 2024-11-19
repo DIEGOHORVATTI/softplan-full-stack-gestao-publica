@@ -1,7 +1,6 @@
 package com.rinha.backend.service;
 
 import com.rinha.backend.dto.*;
-import com.rinha.backend.dto.ExtratoResponse.TransacaoExtrato;
 import com.rinha.backend.model.*;
 import com.rinha.backend.repository.*;
 import jakarta.transaction.Transactional;
@@ -11,7 +10,6 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +19,6 @@ public class ClienteService {
 
     @Transactional
     public TransactionSummary executeTransaction(Long id, TransacaoRequest request) {
-        String descricao = request.getDescricao();
-        String type = request.getTipo();
-
         Cliente client = clienteRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
 
@@ -31,7 +26,7 @@ public class ClienteService {
         int newBalance = client.getSaldo();
 
         // r para recebível | d para débito
-        switch (type) {
+        switch (request.getTipo()) {
             case "d":
                 newBalance -= request.getValor();
 
@@ -54,8 +49,8 @@ public class ClienteService {
         Transaction transaction = new Transaction();
         transaction.setCliente(client);
         transaction.setValor(request.getValor());
-        transaction.setTipo(type);
-        transaction.setDescricao(descricao);
+        transaction.setTipo(request.getTipo());
+        transaction.setDescricao(request.getDescricao());
         transaction.setRealizadaEm(LocalDateTime.now());
         transacaoRepository.save(transaction);
 
@@ -74,7 +69,7 @@ public class ClienteService {
         ExtratoResponse response = new ExtratoResponse();
         response.setSaldo(balanceInfo);
 
-        Stream<TransacaoExtrato> transactionToExtratoMap = transacaoRepository
+        response.setUltimas_transacoes(transacaoRepository
                 .findTop10ByClienteIdOrderByRealizadaEmDesc(id).stream()
                 .map(transaction -> {
                     ExtratoResponse.TransacaoExtrato transactionExtrato = new ExtratoResponse.TransacaoExtrato();
@@ -84,9 +79,7 @@ public class ClienteService {
                     transactionExtrato.setRealizada_em(transaction.getRealizadaEm());
 
                     return transactionExtrato;
-                });
-
-        response.setUltimas_transacoes(transactionToExtratoMap.collect(Collectors.toList()));
+                }).collect(Collectors.toList()));
 
         return response;
     }
