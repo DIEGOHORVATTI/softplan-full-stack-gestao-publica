@@ -1,18 +1,25 @@
 services:
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile.test
+  db:
+    image: postgres:latest
+    hostname: db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_DB=postgres
     volumes:
-      - ./:/app
-      - ~/.m2:/root/.m2
-      - test-volume:/app/test
-    command: ./mvnw -X gatling:test
-    depends_on:
-      - api01
-      - api02
-      - nginx
-      - db
+      - ./script.sql:/docker-entrypoint-initdb.d/script.sql
+    ports:
+      - '5432:5432'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.13'
+          memory: '140MB'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api01: &api
     hostname: api01
@@ -38,7 +45,7 @@ services:
     image: nginx:latest
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - test-volume:/app/test
+      - test-volume:/app/load-test/user-files/results
     depends_on:
       - api01
       - api02
@@ -49,28 +56,6 @@ services:
         limits:
           cpus: '0.17'
           memory: '10MB'
-
-  db:
-    image: postgres:latest
-    hostname: db
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123
-      - POSTGRES_DB=postgres
-    volumes:
-      - ./script.sql:/docker-entrypoint-initdb.d/script.sql
-    ports:
-      - '5432:5432'
-    deploy:
-      resources:
-        limits:
-          cpus: '0.13'
-          memory: '140MB'
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
 networks:
   default:

@@ -21,7 +21,6 @@ public class ClienteService {
 
     @Transactional
     public TransactionSummary executeTransaction(Long id, TransacaoRequest request) {
-        int valor = request.getValor();
         String descricao = request.getDescricao();
         String type = request.getTipo();
 
@@ -34,7 +33,7 @@ public class ClienteService {
         // r para recebível | d para débito
         switch (type) {
             case "d":
-                newBalance -= valor;
+                newBalance -= request.getValor();
 
                 if (newBalance < -limit) {
                     throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
@@ -43,7 +42,7 @@ public class ClienteService {
 
                 break;
             case "r":
-                newBalance += valor;
+                newBalance += request.getValor();
                 break;
             default:
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo de transação inválido");
@@ -54,7 +53,7 @@ public class ClienteService {
 
         Transaction transaction = new Transaction();
         transaction.setCliente(client);
-        transaction.setValor(valor);
+        transaction.setValor(request.getValor());
         transaction.setTipo(type);
         transaction.setDescricao(descricao);
         transaction.setRealizadaEm(LocalDateTime.now());
