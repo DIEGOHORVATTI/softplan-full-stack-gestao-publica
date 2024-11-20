@@ -13,11 +13,6 @@ import lombok.RequiredArgsConstructor;
 public class ClienteController {
     private final ClienteService clienteService;
 
-    @GetMapping
-    public String GetApiStatus() {
-        return "API Running 🚀";
-    }
-
     @PostMapping("/{id}/transacoes")
     public ResponseEntity<TransactionSummary> executeTransaction(
             @PathVariable Long id,
