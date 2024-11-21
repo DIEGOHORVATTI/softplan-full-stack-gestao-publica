@@ -11,10 +11,8 @@ docker-compose up --build
 
 #### Para rodar o teste de carga
 
-##### No docker
-
 ```shell
-docker-compose -f docker-compose.test.yml up --build
+./mvnw -X gatling:test
 ```
 
 ##### Localmente
