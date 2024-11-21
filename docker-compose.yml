@@ -28,6 +28,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - DB_HOSTNAME=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=123
     depends_on:
       - db
     deploy:
